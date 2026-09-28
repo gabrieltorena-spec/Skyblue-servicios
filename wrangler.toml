@@ -9,7 +9,7 @@ directory = "./public"
 [[d1_databases]]
 binding = "DB"
 database_name = "skyblue-servicios"
-database_id = "PENDIENTE-se-completa-al-crear-la-base-en-cloudflare"
+database_id = "03df5df9-334e-40e6-98e4-39ed5c4fc367"
 migrations_dir = "migrations"
 
 [observability]

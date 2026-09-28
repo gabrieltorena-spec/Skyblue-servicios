@@ -8,6 +8,7 @@
     "migrar": "wrangler d1 migrations apply skyblue-servicios --local",
     "migrar:produccion": "wrangler d1 migrations apply skyblue-servicios --remote",
     "publicar": "wrangler deploy",
+    "deploy": "wrangler d1 migrations apply skyblue-servicios --remote && wrangler deploy",
     "empleados": "node herramientas/claves.js"
   },
   "license": "UNLICENSED",
