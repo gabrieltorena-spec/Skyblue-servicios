@@ -304,12 +304,15 @@ async function accionPedido(request, env, empleado, solicitudId, accion, ctx) {
     const venceResolucion = s.min_resolucion
       ? new Date(Date.now() + (minutos + s.min_resolucion) * 60000).toISOString()
       : null;
-    await env.DB.prepare(
+    // Si otra compañera lo tomó mientras tanto, esta pulsación no hace nada:
+    // dos mucamas no caminan a la misma casa.
+    const r = await env.DB.prepare(
       `UPDATE solicitudes SET estado = 'tomado', tomado_por = ?, tomado_en = ?,
               eta_minutos = ?, eta_avisada_en = ?, vence_resolucion_en = ?,
               escalado = 0, escalado_en = NULL, actualizada_en = ?
-        WHERE id = ?`
+        WHERE id = ? AND estado IN ('recibido','reabierto')`
     ).bind(empleado.id, t, minutos, t, venceResolucion, t, s.id).run();
+    if (!r.meta?.changes) return irA('/personal/tablero');
     await D.registrarEvento(env, { solicitudId: s.id, anterior: s.estado, nuevo: 'tomado', empleadoId: empleado.id });
     if (s.huesped_quiere_aviso) ctx?.waitUntil(Push.avisarHuesped(env, s.estadia_id));
     return irA('/personal/tablero');
