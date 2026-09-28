@@ -1,0 +1,17 @@
+{
+  "name": "skyblue-servicios",
+  "version": "1.0.0",
+  "description": "App de servicios para huéspedes de Skyblue Park. Cloudflare Worker + D1.",
+  "private": true,
+  "scripts": {
+    "dev": "wrangler dev --local",
+    "migrar": "wrangler d1 migrations apply skyblue-servicios --local",
+    "migrar:produccion": "wrangler d1 migrations apply skyblue-servicios --remote",
+    "publicar": "wrangler deploy",
+    "empleados": "node herramientas/claves.js"
+  },
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "wrangler": "^4.142.0"
+  }
+}

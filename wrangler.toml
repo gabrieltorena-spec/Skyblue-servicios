@@ -1,0 +1,20 @@
+name = "skyblue-servicios"
+main = "src/index.js"
+compatibility_date = "2026-09-01"
+
+# El wordmark, las plumas y los iconos se sirven desde public/ sin pasar por el worker.
+[assets]
+directory = "./public"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "skyblue-servicios"
+database_id = "PENDIENTE-se-completa-al-crear-la-base-en-cloudflare"
+migrations_dir = "migrations"
+
+[observability]
+enabled = true
+
+# El cron que escala los pedidos no tomados a tiempo corre cada minuto.
+[triggers]
+crons = ["* * * * *"]
