@@ -70,6 +70,8 @@ export async function pantallaIngreso(env, casa, { error = null } = {}) {
 // --------------------------------------------------------------- inicio
 export async function pantallaInicio(env, estadia) {
   const avisos = await D.avisosVigentes(env);
+  const wifiRed = await D.config(env, 'wifi_red', 'Skyblue');
+  const wifiClave = await D.config(env, 'wifi_clave', '');
   const enCurso = (await D.solicitudesDeEstadia(env, estadia.id))
     .filter((s) => !['finalizado', 'cancelado'].includes(s.estado));
 
@@ -138,9 +140,40 @@ export async function pantallaInicio(env, estadia) {
 
   <div class="espaciador"></div>
 
+  <div style="padding:30px 26px 0">
+    <div class="kicker">WI-FI</div>
+    <button id="wifi" data-clave="${esc(wifiClave)}"
+            style="margin-top:11px;width:100%;display:flex;align-items:center;gap:14px;padding:14px 16px;
+                   background:${C.superficie};border:1px solid ${C.filete};border-radius:2px;text-align:left;cursor:pointer">
+      <div class="crece">
+        <div style="font-size:14px;color:${C.marfil}">${esc(wifiRed)}</div>
+        <div style="margin-top:3px;font-size:13px;letter-spacing:.06em;color:${C.arena}">${esc(wifiClave)}</div>
+      </div>
+      <span id="wifi-estado" style="font-size:10px;letter-spacing:.16em;color:${C.doradoApagado};white-space:nowrap">COPIAR</span>
+    </button>
+  </div>
+
   <div style="padding:26px 26px 28px">
     <a class="btn btn-sec" style="font-size:10px;letter-spacing:.26em;min-height:48px;padding:15px" href="/casa/${esc(estadia.casa)}/salida">AVISAR MI SALIDA</a>
-  </div>`;
+  </div>
+
+  <script>
+  (function () {
+    var b = document.getElementById('wifi'), e = document.getElementById('wifi-estado');
+    if (!b) return;
+    b.addEventListener('click', function () {
+      var clave = b.getAttribute('data-clave');
+      var listo = function () { e.textContent = 'COPIADA'; setTimeout(function () { e.textContent = 'COPIAR'; }, 2500); };
+      if (navigator.clipboard) navigator.clipboard.writeText(clave).then(listo, function () {});
+      else {
+        var t = document.createElement('textarea');
+        t.value = clave; document.body.appendChild(t); t.select();
+        try { document.execCommand('copy'); listo(); } catch (x) {}
+        document.body.removeChild(t);
+      }
+    });
+  })();
+  </script>`;
   return pagina({ titulo: 'Inicio', cuerpo });
 }
 

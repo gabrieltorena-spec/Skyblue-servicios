@@ -243,14 +243,23 @@ async function rutasPersonal(request, env, partes, metodo, ctx) {
     if (!esJefe) return irA('/personal/tablero');
 
     if (resto.length === 1 && metodo === 'GET') {
+      const p = new URL(request.url).searchParams;
       return html(await P.pantallaAviso(env, empleado, {
-        ok: new URL(request.url).searchParams.get('ok') === '1',
+        ok: p.get('ok') === '1', tope: p.get('tope') === '1',
       }));
     }
 
     if (resto.length === 1 && metodo === 'POST') {
       const { titulo = '', cuerpo = '', horas = '24' } = await campos(request);
       if (!titulo.trim() || !cuerpo.trim()) return irA('/personal/aviso');
+
+      // Freno: dos avisos por día. Más que eso y el huésped deja de leerlos.
+      const tope = Number(await D.config(env, 'max_avisos_dia', '2'));
+      const hoy = await env.DB.prepare(
+        `SELECT COUNT(*) AS n FROM avisos WHERE publicado_en > datetime('now','-24 hours')`
+      ).first();
+      if (hoy && hoy.n >= tope) return irA('/personal/aviso?tope=1');
+
       const h = Math.min(336, Math.max(1, Number(horas) || 24));
       await env.DB.prepare(
         `INSERT INTO avisos (id, titulo, cuerpo, publicado_por, publicado_en, vence_en, notificar)

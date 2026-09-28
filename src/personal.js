@@ -453,7 +453,7 @@ export async function pantallaCentral(env, empleado, { error = null, ok = null }
 }
 
 // ----------------------------------------------------------------- aviso
-export async function pantallaAviso(env, empleado, { ok = false } = {}) {
+export async function pantallaAviso(env, empleado, { ok = false, tope = false } = {}) {
   const r = await env.DB.prepare(
     `SELECT a.*, e.nombre AS quien FROM avisos a
        LEFT JOIN empleados e ON e.id = a.publicado_por
@@ -466,6 +466,7 @@ export async function pantallaAviso(env, empleado, { ok = false } = {}) {
   ${encabezado(empleado, { volverA: '/personal/tablero', titulo: 'Publicar un aviso' })}
 
   ${ok ? `<div style="margin:18px 22px 0;padding:13px 15px;background:#152A22;border-left:2px solid ${C.ok};font-size:13.5px;color:#CFE5DA">Publicado. Ya lo ven las 13 casas.</div>` : ''}
+  ${tope ? `<div style="margin:18px 22px 0;padding:13px 15px;background:#2A2416;border-left:2px solid ${C.aviso};font-size:13.5px;line-height:1.55;color:#E8D6B2">Ya salieron dos avisos en las últimas 24 horas. Si este es urgente, bajá uno de los de abajo y volvé a publicar.</div>` : ''}
 
   <form method="post" action="/personal/aviso" style="padding:20px 22px 0;display:flex;flex-direction:column;gap:14px">
     <div style="display:flex;flex-direction:column;gap:8px">
