@@ -434,8 +434,46 @@ export async function pantallaCentral(env, empleado, { error = null, ok = null }
     </div>`;
   }).join('');
 
+  // Quién tiene el celular armado. Es lo primero que hay que mirar en enero:
+  // un empleado sin celular registrado no se entera de nada.
+  const t = await env.DB.prepare(
+    `SELECT e.nombre, e.rol, COUNT(p.id) AS celulares
+       FROM empleados e
+       LEFT JOIN push_subs p
+         ON p.duenio_id = e.id AND p.duenio_tipo = 'empleado' AND p.revocada_en IS NULL
+      WHERE e.activo = 1
+      GROUP BY e.id
+      ORDER BY e.rol, e.nombre`
+  ).all();
+  const gente = t.results || [];
+  const sinCelular = gente.filter((g) => !g.celulares).length;
+
   const cuerpo = `
   ${encabezado(empleado, { volverA: '/personal/tablero', titulo: 'Central · casas' })}
+
+  <div style="padding:20px 22px 0">
+    <div class="fila">
+      <div class="crece kicker">CELULARES QUE SUENAN</div>
+      <div style="font-size:11px;color:${sinCelular ? C.aviso : C.ok}">
+        ${sinCelular ? `${sinCelular} sin activar` : 'todos activados'}
+      </div>
+    </div>
+    <div style="margin-top:10px;background:${C.superficie};border-left:3px solid ${sinCelular ? C.aviso : C.ok}">
+      ${gente.map((g, i) => `
+      <div class="fila" style="padding:11px 15px;${i ? `border-top:1px solid ${C.fileteSuave}` : ''}">
+        <div class="crece" style="font-size:14px;color:${C.marfil}">${esc(g.nombre)}</div>
+        <div style="font-size:12px;color:${g.celulares ? C.ok : C.aviso}">
+          ${g.celulares ? (g.celulares > 1 ? `${g.celulares} celulares` : 'celular activado') : 'todavía no'}
+        </div>
+      </div>`).join('')}
+    </div>
+    ${sinCelular ? `
+    <div style="margin-top:9px;font-size:12px;line-height:1.55;color:${C.apagado}">
+      Quien figura en amarillo no recibe el aviso en el celular. Tiene que entrar
+      desde su teléfono, agregar la app a la pantalla de inicio y tocar
+      "ACTIVAR LOS AVISOS" en el tablero.
+    </div>` : ''}
+  </div>
 
   ${ok ? `<div style="margin:18px 22px 0;padding:13px 15px;background:#152A22;border-left:2px solid ${C.ok};font-size:13.5px;color:#CFE5DA">${esc(ok)}</div>` : ''}
   ${error ? `<div style="margin:18px 22px 0;padding:13px 15px;background:#2A1A1C;border-left:2px solid ${C.alerta};font-size:13.5px;color:#E8CFCB">${esc(error)}</div>` : ''}
