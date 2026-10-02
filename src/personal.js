@@ -8,8 +8,10 @@ import { VAPID_PUBLICA } from './push.js';
 const ROLES = {
   admin:          { titulo: 'Central',       categorias: ['limpieza', 'mantenimiento', 'recepcion'] },
   recepcion:      { titulo: 'Recepción',     categorias: ['limpieza', 'mantenimiento', 'recepcion'] },
-  mucama:         { titulo: 'Limpieza',      categorias: ['limpieza'] },
-  mantenimiento:  { titulo: 'Mantenimiento', categorias: ['mantenimiento'] },
+  // Mucama y mantenimiento se ven los pedidos entre ellos, para cubrirse.
+  // El celular sigue sonando solo por lo propio: ver no es lo mismo que cargar.
+  mucama:         { titulo: 'Limpieza',      categorias: ['limpieza', 'mantenimiento'] },
+  mantenimiento:  { titulo: 'Mantenimiento', categorias: ['limpieza', 'mantenimiento'] },
 };
 
 export const ETAS = [
