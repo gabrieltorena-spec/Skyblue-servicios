@@ -41,6 +41,17 @@ export async function estadiaActiva(env, casa) {
   ).bind(casa).first();
 }
 
+// Fecha de hoy en Uruguay (UTC-3), como 'AAAA-MM-DD'.
+export function hoyUY() {
+  return new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString().slice(0, 10);
+}
+
+export function sumarDias(fecha, dias) {
+  const d = new Date(`${fecha}T12:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + Number(dias));
+  return d.toISOString().slice(0, 10);
+}
+
 export async function activarEstadia(env, { casa, nombre, apellido, noches }) {
   const umbral = Number(await config(env, 'umbral_noches_mucama', '3'));
   const n = Math.max(1, Number(noches) || 1);
@@ -52,13 +63,71 @@ export async function activarEstadia(env, { casa, nombre, apellido, noches }) {
     identidad: normalizar(`${nombre} ${apellido}`),
     noches: n,
     incluye_mucama: n >= umbral ? 1 : 0,
+    fecha_salida: sumarDias(hoyUY(), n),
     activada_en: ahora(),
   };
+  // Una estadía nueva pisa a la que hubiera quedado abierta en esa casa.
+  await cerrarEstadiasDeCasa(env, casa, 'reemplazada');
   await env.DB.prepare(
-    `INSERT INTO estadias (id, casa, titular_nombre, titular_apellido, identidad, noches, incluye_mucama, activada_en)
-     VALUES (?,?,?,?,?,?,?,?)`
-  ).bind(e.id, e.casa, e.titular_nombre, e.titular_apellido, e.identidad, e.noches, e.incluye_mucama, e.activada_en).run();
+    `INSERT INTO estadias (id, casa, titular_nombre, titular_apellido, identidad, noches, incluye_mucama, fecha_salida, activada_en)
+     VALUES (?,?,?,?,?,?,?,?,?)`
+  ).bind(e.id, e.casa, e.titular_nombre, e.titular_apellido, e.identidad, e.noches, e.incluye_mucama, e.fecha_salida, e.activada_en).run();
   return e;
+}
+
+// El huésped completa lo suyo: cuántos son y de dónde vienen.
+// La nacionalidad decide además en qué idioma le habla la app.
+const IDIOMA_POR_PAIS = { UY: 'es', AR: 'es', BR: 'pt', otro: 'en' };
+
+export async function completarEstadia(env, estadiaId, { pasajeros, nacionalidad }) {
+  const p = Math.min(12, Math.max(1, Number(pasajeros) || 1));
+  const pais = ['UY', 'AR', 'BR'].includes(nacionalidad) ? nacionalidad : 'otro';
+  await env.DB.prepare(
+    `UPDATE estadias SET pasajeros = ?, nacionalidad = ?, idioma = ?, completada_en = ? WHERE id = ?`
+  ).bind(p, pais, IDIOMA_POR_PAIS[pais], ahora(), estadiaId).run();
+  return { pasajeros: p, nacionalidad: pais };
+}
+
+// Cierra las estadías abiertas de una casa, cancela sus pedidos y corta sesiones.
+export async function cerrarEstadiasDeCasa(env, casa, motivo = 'cerrada') {
+  const r = await env.DB.prepare(
+    `SELECT id FROM estadias WHERE casa = ? AND estado IN ('activa','salida_avisada')`
+  ).bind(casa).all();
+  for (const e of r.results || []) await cerrarEstadia(env, e.id, motivo);
+  return (r.results || []).length;
+}
+
+export async function cerrarEstadia(env, estadiaId, motivo = 'cerrada') {
+  const t = ahora();
+  await env.DB.prepare(
+    `UPDATE estadias SET estado = 'cerrada', cerrada_en = ? WHERE id = ?`
+  ).bind(t, estadiaId).run();
+  await env.DB.prepare(
+    `UPDATE solicitudes SET estado = 'cancelado', actualizada_en = ?
+      WHERE estadia_id = ? AND estado NOT IN ('finalizado','cancelado')`
+  ).bind(t, estadiaId).run();
+  await revocarSesiones(env, estadiaId);
+  console.log(`estadía ${estadiaId} cerrada (${motivo})`);
+}
+
+// Vencimiento solo. Nadie aprieta check-out: la fecha de salida lo hace.
+// Corre con el cron de cada minuto y sólo actúa pasada la hora de cierre.
+export async function cerrarVencidas(env) {
+  const hora = Number(await config(env, 'hora_cierre_automatico', '11'));
+  const ahoraUY = new Date(Date.now() - 3 * 60 * 60 * 1000);
+  const hoy = ahoraUY.toISOString().slice(0, 10);
+
+  // Antes de la hora de cierre, la casa de hoy todavía es del huésped que se va.
+  const limite = ahoraUY.getUTCHours() >= hora ? hoy : sumarDias(hoy, -1);
+
+  const r = await env.DB.prepare(
+    `SELECT id FROM estadias
+      WHERE estado IN ('activa','salida_avisada')
+        AND fecha_salida IS NOT NULL AND fecha_salida <= ?`
+  ).bind(limite).all();
+
+  for (const e of r.results || []) await cerrarEstadia(env, e.id, 'vencida');
+  return (r.results || []).length;
 }
 
 // --------------------------------------------------------------- sesiones

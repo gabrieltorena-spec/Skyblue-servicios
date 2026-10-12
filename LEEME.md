@@ -94,7 +94,7 @@ Ese archivo no va al repositorio. En producción la misma clave va como
    `npx wrangler d1 migrations apply skyblue-servicios --remote`
 3. Cargar el secreto: `npx wrangler secret put VAPID_PRIVADA`
 4. `npx wrangler deploy`
-5. Apuntar `servicios.skybluepark.com.uy` al Worker.
+5. Apuntar `servicios.skybluepark.com` al Worker.
 
 ---
 

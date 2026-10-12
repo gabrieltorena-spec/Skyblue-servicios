@@ -3,6 +3,7 @@
 
 import { enrutar } from './rutas.js';
 import { correrEscalacion } from './escalacion.js';
+import { cerrarVencidas } from './datos.js';
 
 export default {
   async fetch(request, env, ctx) {
@@ -17,8 +18,11 @@ export default {
     }
   },
 
-  // Cada minuto: marcar como escalados los pedidos que nadie tomó a tiempo.
+  // Cada minuto: escalar los pedidos que nadie tomó a tiempo, y cerrar las
+  // estadías cuya fecha de salida ya pasó. El check-out no depende de que
+  // nadie apriete un botón.
   async scheduled(event, env, ctx) {
     ctx.waitUntil(correrEscalacion(env));
+    ctx.waitUntil(cerrarVencidas(env));
   },
 };

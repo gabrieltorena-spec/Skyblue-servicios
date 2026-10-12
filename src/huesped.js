@@ -68,6 +68,71 @@ export async function pantallaIngreso(env, casa, { error = null } = {}) {
 }
 
 // --------------------------------------------------------------- inicio
+// Lo único que le pedimos al huésped: cuántos son y de dónde vienen.
+// Tres toques y una cuenta. Nada de teclado salvo que sea de otro país.
+const PAISES = [
+  { clave: 'UY', nombre: 'Uruguay' },
+  { clave: 'AR', nombre: 'Argentina' },
+  { clave: 'BR', nombre: 'Brasil' },
+  { clave: 'otro', nombre: 'Otro país' },
+];
+
+export async function pantallaCompletar(env, estadia, { error = null } = {}) {
+  const cuerpo = `
+  ${encabezadoHuesped({ casa: Number(estadia.casa) })}
+
+  <div style="padding:30px 30px 0">
+    <div class="serif" style="font-size:34px;font-weight:300;line-height:1.08">Hola, ${esc(estadia.titular_nombre)}.</div>
+    <div style="margin-top:11px;font-size:13.5px;line-height:1.6;color:${C.arena}">Dos cosas y listo. Nos sirven para prepararte la casa como corresponde.</div>
+  </div>
+
+  ${error ? `<div style="margin:20px 30px 0;padding:13px 15px;background:#2A1A1C;border-left:2px solid ${C.alerta};font-size:13px;line-height:1.5;color:#E8CFCB">${esc(error)}</div>` : ''}
+
+  <form method="post" action="/casa/${esc(estadia.casa)}/completar" id="f"
+        style="padding:30px 30px 0;display:flex;flex-direction:column;gap:30px">
+
+    <div>
+      <div class="kicker" style="color:${C.apagado}">CUÁNTOS SON</div>
+      <div style="margin-top:14px;display:flex;align-items:center;gap:20px">
+        <button type="button" class="btn btn-sec paso" data-d="-1" aria-label="Uno menos"
+                style="width:62px;min-height:62px;padding:0;font-size:26px;line-height:1">−</button>
+        <div class="serif" id="n" style="flex:1;text-align:center;font-size:52px;font-weight:300;line-height:1;color:${C.marfil}">2</div>
+        <button type="button" class="btn btn-sec paso" data-d="1" aria-label="Uno más"
+                style="width:62px;min-height:62px;padding:0;font-size:26px;line-height:1">+</button>
+      </div>
+      <input type="hidden" name="pasajeros" id="p" value="2">
+    </div>
+
+    <div>
+      <div class="kicker" style="color:${C.apagado}">DE DÓNDE VIENEN</div>
+      <div style="margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        ${PAISES.map((p) => `
+        <button type="submit" name="nacionalidad" value="${esc(p.clave)}" class="btn btn-sec"
+                style="min-height:62px;padding:15px;font-size:13px;letter-spacing:.08em">${esc(p.nombre)}</button>`).join('')}
+      </div>
+    </div>
+  </form>
+
+  <div class="espaciador"></div>
+
+  <div style="padding:0 30px 34px">
+    <div style="font-size:12px;line-height:1.55;color:${C.tenue}">Tocá el país para continuar.</div>
+  </div>
+
+  <script>
+  (function () {
+    var n = document.getElementById('n'), p = document.getElementById('p'), v = 2;
+    document.querySelectorAll('.paso').forEach(function (b) {
+      b.addEventListener('click', function () {
+        v = Math.min(12, Math.max(1, v + Number(b.dataset.d)));
+        n.textContent = v; p.value = v;
+      });
+    });
+  })();
+  </script>`;
+  return pagina({ titulo: 'Bienvenidos', cuerpo });
+}
+
 export async function pantallaInicio(env, estadia) {
   const avisos = await D.avisosVigentes(env);
   const wifiRed = await D.config(env, 'wifi_red', 'Skyblue');
@@ -456,7 +521,7 @@ export async function pantallaSugerencias(env, estadia, { enviada = false } = {}
 }
 
 // --------------------------------------------------------------- salida
-export async function pantallaSalida(env, estadia, { hecho = false } = {}) {
+export async function pantallaSalida(env, estadia, { hecho = false, resena = null } = {}) {
   const cuerpo = `
   ${encabezadoHuesped({ casa: Number(estadia.casa), volverA: hecho ? null : `/casa/${estadia.casa}` })}
 
@@ -467,6 +532,35 @@ export async function pantallaSalida(env, estadia, { hecho = false } = {}) {
     <div style="width:44px;height:1px;background:${C.dorado}"></div>
     <div style="font-size:13.5px;line-height:1.6;color:${C.arena};max-width:290px">Ya avisamos a mucama. Gracias por elegirnos: nos encantaría verte de vuelta.</div>
   </div>
+
+  <div style="margin-top:38px;border-top:1px solid ${C.fileteSuave}">
+    <div style="padding:26px 30px 0">
+      <div class="kicker" style="color:${C.apagado}">ANTES DE IRTE</div>
+      <div style="margin-top:12px;font-size:13.5px;line-height:1.6;color:${C.arena}">Dos minutos tuyos nos cambian la temporada. Elegí por dónde:</div>
+    </div>
+
+    <div style="padding:20px 30px 0;display:flex;flex-direction:column;gap:11px">
+      ${resena ? `
+      <a href="${esc(resena)}" target="_blank" rel="noopener"
+         style="display:flex;align-items:center;gap:14px;min-height:66px;padding:15px 17px;background:${C.superficie};border-left:2px solid ${C.dorado};text-decoration:none">
+        <div class="crece">
+          <div style="font-size:14.5px;color:${C.marfil}">Dejar una reseña en Google</div>
+          <div style="margin-top:3px;font-size:12.5px;line-height:1.45;color:${C.apagado}">Pública. Es la que ayuda a que otros nos encuentren.</div>
+        </div>
+        <div style="font-size:17px;color:${C.dorado}">→</div>
+      </a>` : ''}
+
+      <a href="https://wa.me/59891657200" target="_blank" rel="noopener"
+         style="display:flex;align-items:center;gap:14px;min-height:66px;padding:15px 17px;background:${C.superficie};border-left:2px solid ${C.doradoApagado};text-decoration:none">
+        <div class="crece">
+          <div style="font-size:14.5px;color:${C.marfil}">Contarnos algo a nosotros</div>
+          <div style="margin-top:3px;font-size:12.5px;line-height:1.45;color:${C.apagado}">Privado, por WhatsApp. Si algo estuvo mal quiero saberlo.</div>
+        </div>
+        <div style="font-size:17px;color:${C.doradoApagado}">→</div>
+      </a>
+    </div>
+  </div>
+
   <div class="espaciador"></div>
   <div style="padding:0 30px 34px;text-align:center">
     <div class="kicker">SKYBLUE PARK · PUNTA COLORADA</div>

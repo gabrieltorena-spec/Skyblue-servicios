@@ -227,13 +227,7 @@ async function rutasPersonal(request, env, partes, metodo, ctx) {
 
     if (resto[1] === 'cerrar' && metodo === 'POST') {
       const { id = '' } = await campos(request);
-      const t = D.ahora();
-      await env.DB.prepare(`UPDATE estadias SET estado = 'cerrada', cerrada_en = ? WHERE id = ?`).bind(t, id).run();
-      await env.DB.prepare(
-        `UPDATE solicitudes SET estado = 'cancelado', actualizada_en = ?
-          WHERE estadia_id = ? AND estado NOT IN ('finalizado','cancelado')`
-      ).bind(t, id).run();
-      await D.revocarSesiones(env, id);
+      await D.cerrarEstadia(env, id, 'cerrada a mano');
       return irA('/personal/central?ok=' + encodeURIComponent('Estadía cerrada. El QR de esa casa vuelve a pedir nombre.'));
     }
   }
@@ -386,6 +380,23 @@ async function rutasHuesped(request, env, partes, metodo, ctx) {
     return html(await H.pantallaIngreso(env, casa));
   }
 
+  // 2.b Primera vez: el huésped completa cuántos son y de dónde vienen.
+  // Hasta que no lo haga, no ve nada más. Es una pantalla, tres toques.
+  if (!estadia.completada_en) {
+    if (resto[0] === 'completar' && metodo === 'POST') {
+      const { pasajeros = '2', nacionalidad = '' } = await campos(request);
+      if (!['UY', 'AR', 'BR', 'otro'].includes(nacionalidad)) {
+        return html(await H.pantallaCompletar(env, estadia, {
+          error: 'Tocá uno de los cuatro botones de país para seguir.',
+        }));
+      }
+      await D.completarEstadia(env, estadia.id, { pasajeros, nacionalidad });
+      return irA(base);
+    }
+    if (metodo !== 'GET') return irA(base);
+    return html(await H.pantallaCompletar(env, estadia));
+  }
+
   // 3. Inicio.
   if (resto.length === 0 && metodo === 'GET') {
     return html(await H.pantallaInicio(env, estadia));
@@ -428,7 +439,8 @@ async function rutasHuesped(request, env, partes, metodo, ctx) {
           WHERE estadia_id = ? AND estado NOT IN ('finalizado','cancelado')`
       ).bind(t, estadia.id).run();
       await D.revocarSesiones(env, estadia.id);
-      const cuerpo = await H.pantallaSalida(env, estadia, { hecho: true });
+      const resena = await D.config(env, 'link_resena_google', null);
+      const cuerpo = await H.pantallaSalida(env, estadia, { hecho: true, resena });
       return new Response(cuerpo, {
         headers: {
           'content-type': 'text/html; charset=utf-8',

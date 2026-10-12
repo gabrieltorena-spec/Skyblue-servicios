@@ -386,6 +386,15 @@ function tarjeta(s, empleado) {
 }
 
 // ---------------------------------------------------------------- central
+const PAIS = { UY: 'Uruguay', AR: 'Argentina', BR: 'Brasil', otro: 'Otro país' };
+
+// '2026-10-28' → '28/10'. Sin fecha, un guion.
+function fechaCorta(f) {
+  if (!f) return '—';
+  const [, m, d] = String(f).split('-');
+  return d && m ? `${d}/${m}` : String(f);
+}
+
 export async function pantallaCentral(env, empleado, { error = null, ok = null } = {}) {
   const r = await env.DB.prepare(
     `SELECT * FROM estadias WHERE estado IN ('activa','salida_avisada') ORDER BY casa`
@@ -427,6 +436,11 @@ export async function pantallaCentral(env, empleado, { error = null, ok = null }
         <div style="font-size:14.5px;color:${C.marfil}">${esc(e.titular_nombre)} ${esc(e.titular_apellido)}</div>
         <div style="margin-top:3px;font-size:12px;color:${salida ? C.aviso : C.apagado}">
           ${salida ? 'Avisó la salida · la casa se puede preparar' : `${e.noches} noche${e.noches > 1 ? 's' : ''} · ${e.incluye_mucama ? 'con parcial' : 'sin parcial'}`}
+        </div>
+        <div style="margin-top:3px;font-size:12px;color:${C.tenue}">
+          ${e.completada_en
+            ? `${e.pasajeros} pax · ${esc(PAIS[e.nacionalidad] || e.nacionalidad)} · sale ${esc(fechaCorta(e.fecha_salida))}`
+            : `Sin registrar todavía · sale ${esc(fechaCorta(e.fecha_salida))}`}
         </div>
       </div>
       <form method="post" action="/personal/central/cerrar">
