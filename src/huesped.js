@@ -60,8 +60,8 @@ export async function pantallaIngreso(env, casa, { error = null } = {}) {
     <div class="filete"></div>
     <div style="font-size:12.5px;line-height:1.5;color:${C.apagado}">¿No podés entrar? Llamanos o escribinos.</div>
     <div style="display:flex;gap:10px">
-      <a class="btn btn-sec" style="letter-spacing:normal;padding-left:13px;font-size:12.5px;min-height:46px;padding-top:13px" href="tel:+59891567200">Llamar</a>
-      <a class="btn btn-sec" style="letter-spacing:normal;padding-left:13px;font-size:12.5px;min-height:46px;padding-top:13px" href="https://wa.me/59891567200">WhatsApp</a>
+      <a class="btn btn-sec" style="letter-spacing:normal;padding-left:13px;font-size:12.5px;min-height:46px;padding-top:13px" href="tel:+59891657200">Llamar</a>
+      <a class="btn btn-sec" style="letter-spacing:normal;padding-left:13px;font-size:12.5px;min-height:46px;padding-top:13px" href="https://wa.me/59891657200">WhatsApp</a>
     </div>
   </div>`;
   return pagina({ titulo: `Apartamento ${Number(casa)}`, cuerpo });
@@ -223,7 +223,7 @@ export async function pantallaCategoria(env, estadia, categoria) {
     <div style="font-size:13px;line-height:1.55;color:#E8D6B2">${categoria === 'limpieza'
       ? `El servicio de limpieza es de ${rangoTexto(h)}. Pedilo mañana a partir de las ${h.desde} y lo resolvemos.`
       : `Ahora estamos fuera de horario. Lo vemos a primera hora.`}</div>
-    <a class="btn" style="margin-top:12px;min-height:46px;padding:14px;font-size:11px" href="https://wa.me/59891567200">ESCRIBIR POR WHATSAPP</a>
+    <a class="btn" style="margin-top:12px;min-height:46px;padding:14px;font-size:11px" href="https://wa.me/59891657200">ESCRIBIR POR WHATSAPP</a>
   </div>` : `
   <form method="post" action="/casa/${esc(estadia.casa)}/${esc(categoria)}">
     <div style="padding:20px 26px 0;display:flex;flex-direction:column;gap:8px">
@@ -307,7 +307,7 @@ export async function pantallaPedido(env, estadia, solicitud) {
       <button id="quiero-aviso" class="btn btn-sec" style="font-size:10.5px;letter-spacing:.18em;min-height:48px;padding:15px">AVISARME EN ESTE CELULAR</button>
       <div style="margin-top:8px;font-size:11.5px;line-height:1.5;color:${C.tenue}">Opcional. Si no, mirá esta pantalla o escribinos.</div>
     </div>
-    <a class="btn btn-sec" style="font-size:10.5px;letter-spacing:.22em;min-height:48px;padding:15px" href="https://wa.me/59891567200">HABLAR CON RECEPCIÓN</a>
+    <a class="btn btn-sec" style="font-size:10.5px;letter-spacing:.22em;min-height:48px;padding:15px" href="https://wa.me/59891657200">HABLAR CON RECEPCIÓN</a>
   </div>
 
   ${solicitud.huesped_quiere_aviso ? guionPushHuesped(estadia.casa) : ''}`;

@@ -42,7 +42,7 @@ function noEncontrado() {
     cuerpo: `<div style="padding:70px 34px;display:flex;flex-direction:column;gap:16px">
       <div class="serif" style="font-size:34px;font-weight:300">Esta página no existe.</div>
       <div style="font-size:13.5px;line-height:1.6;color:${C.arena}">Escaneá de nuevo el código QR que está sobre la mesa de tu apartamento.</div>
-      <a class="btn btn-sec" style="margin-top:12px;font-size:10.5px;letter-spacing:.22em;min-height:48px;padding:15px" href="https://wa.me/59891567200">ESCRIBIR A RECEPCIÓN</a>
+      <a class="btn btn-sec" style="margin-top:12px;font-size:10.5px;letter-spacing:.22em;min-height:48px;padding:15px" href="https://wa.me/59891657200">ESCRIBIR A RECEPCIÓN</a>
     </div>`,
   }), 404);
 }

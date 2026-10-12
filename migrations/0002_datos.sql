@@ -33,7 +33,7 @@ INSERT OR REPLACE INTO config (clave, valor) VALUES
  ('horario_limpieza',      '09:00-14:00'),
  ('horario_mantenimiento', '08:00-20:00'),
  ('horario_recepcion',     '08:00-00:00'),
- ('telefono_recepcion',    '091567200'),
+ ('telefono_recepcion',    '091657200'),
  ('wifi_red',              'Skyblue'),
  ('wifi_clave',            'Puntacolorada1519'),
  ('max_avisos_dia',        '2');
